@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String    @unique
+  password          String?
+  role              String    @default("alumno")
+  universidad       String?
+  carrera           String?
+  anioActual        Int?
+  paymentConfigured Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tutorProfile        TutorProfile?
+  reviews             Review[]         @relation("AlumnoReviews")
+  purchases           Purchase[]
+  materialItems       MaterialItem[]
+  salasCreadas        Sala[]           @relation("SalaCreador")
+  salaParticipaciones SalaParticipante[]
+}
+
+model TutorProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  nombreCompleto  String
+  universidad     String
+  carrera         String
+  anioIngreso     Int
+  precioPorHora   Int
+  modalidad       String
+  certificadoUrl  String?
+  estado          String   @default("pendiente")
+  mensajeAdmin    String?
+  calificacion    Float    @default(0)
+  totalResenas    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ramos   TutorRamo[]
+  reviews Review[]
+  salasAsignadas   Sala[]            @relation("SalasTutorAsignado")
+  salasSolicitadas Sala[]            @relation("SalasTutorSolicitado")
+  salaPostulaciones SalaPostulacion[]
+}
+
+model TutorRamo {
+  id           String   @id @default(cuid())
+  tutorId      String
+  nombreRamo   String
+  nota         Float
+  profesor     String
+  anio         Int
+  semestre     Int
+  fueAyudante  Boolean  @default(false)
+  materialDisp String   @default("[]")
+  createdAt    DateTime @default(now())
+
+  tutor TutorProfile @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  alumnoId     String
+  tutorId      String
+  ramo         String
+  profesor     String
+  calificacion Int
+  texto        String
+  createdAt    DateTime @default(now())
+
+  alumno User         @relation("AlumnoReviews", fields: [alumnoId], references: [id])
+  tutor  TutorProfile @relation(fields: [tutorId], references: [id])
+}
+
+model MaterialItem {
+  id          String   @id @default(cuid())
+  tutorUserId String
+  nombre      String
+  ramo        String
+  universidad String
+  tipo        String
+  precio      Int
+  archivoUrl  String?
+  createdAt   DateTime @default(now())
+
+  tutor     User       @relation(fields: [tutorUserId], references: [id])
+  purchases Purchase[]
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  monto     Int
+  createdAt DateTime @default(now())
+
+  user User         @relation(fields: [userId], references: [id])
+  item MaterialItem @relation(fields: [itemId], references: [id])
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Sala {
+  id                String    @id @default(cuid())
+  tipo              String    // "alumno_crea" | "tutor_crea"
+  ramo              String
+  modalidad         String    // "presencial" | "online" | "ambas"
+  estado            String    @default("abierta")
+  privacidad        String    @default("publica")
+  cuposMax          Int       @default(7)
+  precioBase        Int?
+  ubicacion         String?
+  fechaClase        DateTime?
+  horaInicio        String?
+  fechaLimite       DateTime?
+  descripcion       String?
+  creadorId         String
+  tutorAsignadoId   String?
+  tutorSolicitadoId String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  creador         User               @relation("SalaCreador", fields: [creadorId], references: [id])
+  tutorAsignado   TutorProfile?      @relation("SalasTutorAsignado", fields: [tutorAsignadoId], references: [id])
+  tutorSolicitado TutorProfile?      @relation("SalasTutorSolicitado", fields: [tutorSolicitadoId], references: [id])
+  participantes   SalaParticipante[]
+  postulaciones   SalaPostulacion[]
+}
+
+model SalaParticipante {
+  id        String   @id @default(cuid())
+  salaId    String
+  userId    String
+  estado    String   @default("pendiente")
+  createdAt DateTime @default(now())
+
+  sala Sala @relation(fields: [salaId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+}
+
+model SalaPostulacion {
+  id             String   @id @default(cuid())
+  salaId         String
+  tutorProfileId String
+  estado         String   @default("pendiente")
+  mensaje        String?
+  createdAt      DateTime @default(now())
+
+  sala  Sala         @relation(fields: [salaId], references: [id], onDelete: Cascade)
+  tutor TutorProfile @relation(fields: [tutorProfileId], references: [id])
+}
