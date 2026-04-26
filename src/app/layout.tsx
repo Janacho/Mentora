@@ -33,6 +33,7 @@ export default async function RootLayout({
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="flex flex-col min-h-screen bg-white text-slate-900">
         <Navbar session={session} />

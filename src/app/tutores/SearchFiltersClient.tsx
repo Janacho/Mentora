@@ -176,6 +176,8 @@ export default function SearchFiltersClient({ initialParams }: SearchFiltersClie
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-violet-400"
         >
           <option value="todas">Todas</option>
+          <option value="presencial">Presencial</option>
+          <option value="online">Online</option>
           <option value="ambas">Presencial y Online</option>
         </select>
       </div>
